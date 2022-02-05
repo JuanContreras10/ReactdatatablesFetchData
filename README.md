@@ -3,8 +3,10 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Vistas
-filtros
+### Filtros
 ![image](https://user-images.githubusercontent.com/80430318/152654690-b8dcb9b8-e56f-4625-a8e0-d61ea03ae0d4.png)
+### Alertas
+![image](https://user-images.githubusercontent.com/80430318/152655860-49c60107-8e45-4688-8098-a5b38b707bf3.png)
 
 
 ## Available Scripts
