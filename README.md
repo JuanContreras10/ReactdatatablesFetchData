@@ -2,6 +2,11 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Vistas
+###vidta de filtros
+![image](https://user-images.githubusercontent.com/80430318/152654690-b8dcb9b8-e56f-4625-a8e0-d61ea03ae0d4.png)
+
+
 ## Available Scripts
 
 In the project directory, you can run:
