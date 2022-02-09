@@ -9,17 +9,19 @@ import React,  {
 import {
     Grid,
     Typography,
-    InputLabel  ,
+  //  InputLabel  ,
     CircularProgress,
     IconButton,
     Tooltip  ,
-    MenuItem ,
-    Select,
+  //  MenuItem ,
+   // Select,
     FormControl ,
     AppBar  ,
     Button ,
     Snackbar ,
-     
+    Modal ,
+    Box ,
+    TextField
       
 } from '@mui/material/';
 import MuiAlert from '@mui/material/Alert';
@@ -29,7 +31,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { 
     faFileCsv,
     faFilePdf ,
-    faSearch
+    faSearch,
+    faTrash,
+
 } from '@fortawesome/free-solid-svg-icons';
 import DateTimePicker from 'react-datetime-picker';
 import jsPDF from "jspdf";
@@ -37,11 +41,67 @@ import "jspdf-autotable";
 import { format } from "date-fns";
 import Slide from '@material-ui/core/Slide';
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
+
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 function Transition(props) {
   return <Slide {...props} direction="left" />;
+}
+
+
+function convertArrayOfObjectsToCSVTablas(array) {
+	let result;
+
+	const columnDelimiter = ',';
+	const lineDelimiter = '\n';
+	const keys = Object.keys(dataTablas[0]);
+
+	result = '';
+	result += keys.join(columnDelimiter);
+	result += lineDelimiter;
+
+	array.forEach(item => {
+		let ctr = 0;
+		keys.forEach(key => {
+			if (ctr > 0) result += columnDelimiter;
+
+			result += item[key];
+			// eslint-disable-next-line no-plusplus
+			ctr++;
+		});
+		result += lineDelimiter;
+	});
+
+	return result;
+}
+
+function downloadCSVTablas(array,tabla) {
+  
+	const link = document.createElement('a');
+	let csv = convertArrayOfObjectsToCSVTablas(array);
+	if (csv == null) return;
+
+	const filename = 'reporte'+tabla+'.csv';
+
+	if (!csv.match(/^data:text\/csv/i)) {
+		csv = `data:text/csv;charset=utf-8,${csv}`;
+	}
+
+	link.setAttribute('href', encodeURI(csv));
+	link.setAttribute('download', filename);
+	link.click();
 }
 
 function convertArrayOfObjectsToCSV(array) {
@@ -112,10 +172,19 @@ const exportPDF = (datos) => {
   doc.save("reporte.pdf")
 }
 
-//const ExpandedComponent = ({ data }) => <pre>{JSON.stringify(data, null, 2)}</pre>;
+
 const Export = ({ onExport }) => <IconButton color="primary" onClick={e => onExport(e.target.value)}><FontAwesomeIcon icon={faFileCsv} /></IconButton>;
 const ExportPdf = ({ onExport }) => <IconButton color="secondary" onClick={e => onExport(e.target.value)}><FontAwesomeIcon icon={faFilePdf} /></IconButton>;
+
+
+const ExportDireccional = ({ onExport }) => <Button variant="contained" color="primary" onClick={e => onExport(e.target.value)} endIcon={<FontAwesomeIcon icon={faFileCsv} />}>Descargar Direccional</Button>;
+const ExportOmniDireccional = ({ onExport }) => <Button variant="contained" style={{backgroundColor:'#A569BD'}} onClick={e => onExport(e.target.value)} endIcon={<FontAwesomeIcon icon={faFileCsv} />}>Descargar OmniDreccional</Button>;
+
  
+const dataTablas = [
+{idPrueba:"",antena:"",metraje:"",prueba:"",fecha:"",horaInicial:"",tag:"",horaTag:"",tiempoEstimado:""},
+];
+
 const  data = [
   {tag:"",metraje:"",censo:"",lectura:""},
  
@@ -140,6 +209,46 @@ const columns = [
     },
 ];
 
+const BotonesTablas = (props) =>{
+  const handleOpen = () => props.setModal(true);
+
+  return (
+    <>
+    {props.isBuscado ? (
+          <Grid container spacing={2} 
+            direction="row"
+            justifyContent="center"
+            alignItems="center">
+          <Grid item xs={4}>
+          <Tooltip title={"Descargar " + props.listaD.length + " registros"}>
+          <div>
+          <ExportDireccional onExport={() => downloadCSVTablas(props.listaD,"Direccional")} />
+          </div>
+          </Tooltip>
+          </Grid>
+          <Grid item xs={4}>
+          <Tooltip title={"Descargar " + props.listaO.length + "  registros"}>
+          <div>
+          <ExportOmniDireccional  onExport={() => downloadCSVTablas(props.listaO,"Omnidireccional")} />
+          </div>
+          </Tooltip>
+          </Grid>
+          <Grid item xs={4}>
+          <Tooltip title="Eliminar prueba">
+          <div>
+          <Button  variant="contained" style={{backgroundColor:'#E74C3C'}} endIcon={<FontAwesomeIcon icon={faTrash} />}   onClick={handleOpen}>
+            Eliminar prueba
+            </Button>
+          </div>
+          </Tooltip>
+          </Grid>
+          </Grid>)
+          :<span></span>
+          }
+
+    </>
+  );
+}
 
 const AccionesTabla = (props) => {
     return (
@@ -197,9 +306,23 @@ const NumPrueba = (props) => {
       ];
     return(
         <>
-        <FormControl fullWidth>
-        <InputLabel id="demo-simple-select-label">#Prueba</InputLabel>
-        <Select
+        <FormControl fullWidth >
+       
+      
+        <TextField
+         id="outlined-basic"
+         label="#Prueba"
+         variant="outlined"        
+         defaultValue={valores[0]}
+         onChange={HandleChangeNumPruebs}
+         style={{height:"30px"}}
+
+         />
+        </FormControl>
+        </>
+    );
+    /*
+      <Select
           labelId="demo-simple-select-label"
           id="demo-simple-select"
           value={props.valor}
@@ -214,9 +337,7 @@ const NumPrueba = (props) => {
           <MenuItem value={row}>{row}</MenuItem>          
           )}
         </Select>
-        </FormControl>
-        </>
-    );
+    */
 }
 
 const TagSelect = (props) => {
@@ -233,7 +354,21 @@ const TagSelect = (props) => {
     return(
         <>
         <FormControl fullWidth>
-        <InputLabel id="demo-simple-select-label-2"  >Tag</InputLabel>
+
+        <TextField
+         id="outlined-basic"
+         label="Tag"
+         variant="outlined"        
+         defaultValue={valores[0]}
+         onChange={handleChangeTag}
+         style={{height:"30px"}}
+
+         />
+        </FormControl>
+        </>
+    );
+    /*
+            <InputLabel id="demo-simple-select-label-2"  >Tag</InputLabel>
         <Select
           labelId="demo-simple-select-label-2"
           id="demo-simple-select-2"
@@ -249,9 +384,7 @@ const TagSelect = (props) => {
           )}
         
         </Select>
-        </FormControl>
-        </>
-    );
+    */
 }
 
 const Fecha = (props) => {
@@ -270,14 +403,85 @@ const Fecha = (props) => {
     );
 }
 
+const BasicModal = (props) => {
+
+
+  const handleClose = () => props.setModal(false);
+  const Eliminar = () => {
+    var fecha = format(props.fecha, "y-MM-dd");
+    let headersList = {
+      "Accept": "*/*",
+      "User-Agent": "Thunder Client (https://www.thunderclient.com)",
+      "Content-Type": "application/json"
+     }
+     
+     let bodyContent = JSON.stringify({
+         "fecha": fecha,
+         "prueba": props.prueba
+       
+     });
+     
+     fetch("192.168.100.42/apis/apis/eliminarRegistros.php", { 
+       method: "POST",
+       body: bodyContent,
+       headers: headersList
+     }).then(function(response) {
+       return response.text();
+     }).then(function(data) {
+      const jsonConverido = JSON.parse(data);
+           
+     let mensaje = jsonConverido["mensaje"];
+      if(mensaje === "exitoso"){
+        props.setAlerta(true);
+      }
+       handleClose();
+     })
+  }
+
+  return (
+    <div>
+      
+      <Modal
+        open={props.isModal}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+            Alerta
+          </Typography>
+          
+       
+          <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+            Se borraran registros de la prueba {props.prueba} en Direccional, OmniDreccional y Comparativas
+          </Typography>
+          <Typography id="modal-modal-description" sx={{ mt: 3 }}>
+            Seguro que quieres CONTINUAR?
+          </Typography>
+          <br/>
+          <Button  variant="contained" style={{backgroundColor:'#E74C3C', width:'100%'}} endIcon={<FontAwesomeIcon icon={faTrash} />} onClick={Eliminar}>
+           Continuar
+            </Button>
+        </Box>
+      </Modal>
+    </div>
+  );
+}
+
 const PageBody = () => {
-    let [datos, setDatos] = useState([]);
-   
+    let [datos, setDatos] = useState([]);    
+    let [datosD, setDatosD] = useState([]);  
+    let [datosO, setDatosO] = useState([]);  
+    const [isBusqueda, setIsBusqueda] = React.useState(false);
     const [pruebaNum, setPruebaNum] = useState('01');
     const [tag, setTag] = useState('2013');
     const [value, onChange] = useState(new Date());
     const [pending, setPending] = useState(true);
     const [isAlerta, setIsAlerta] = React.useState(false);
+    const [isAlertaSuccess, setIsAlertaSuccess] = React.useState(false);
+    const [openModal, setOpenModal] = React.useState(false);
+    
     var fechas = format(value, "y-MM-dd");
   
   
@@ -288,6 +492,14 @@ const PageBody = () => {
   
       setIsAlerta(false);
     };
+    const handleCloseSuccsess = (event, reason) => {
+      if (reason === 'clickaway') {
+        return;
+      }
+  
+      setIsAlertaSuccess(false);
+    };
+
 
     const GetData = async () => {
 
@@ -315,7 +527,7 @@ const PageBody = () => {
          body: bodyContent,
          headers: headersList
        }).then(function(response) {
-        
+         //console.log(response.text())
          return response.text();
        }).then(function(data) {
          const jsconConverido = JSON.parse(data);
@@ -341,13 +553,147 @@ const PageBody = () => {
            setDatos(lista);
        })
 
+       GetDataD();
+       GetDataO();
 
        setPending(true);
         setTimeout(() => {         
         setPending(false);
-       }, 2000);
+       }, 2500);
        return response;
      }
+    
+     const GetDataD = async () => {
+
+     
+      var fechaFormato = format(value, "y-MM-dd");
+     
+  
+       let valuesArray = [];
+       let lista = [];
+       const response = [];
+       let headersList = {
+         "Accept": "*/*",
+         "User-Agent": "Thunder Client (https://www.thunderclient.com)",
+         "Content-Type": "application/json"
+        }
+        
+        let bodyContent = JSON.stringify({
+            "fecha": fechaFormato,
+            "prueba":pruebaNum,
+            "tag": tag
+        });
+        
+        await fetch("http://192.168.100.42/apis/apis/registrosD.php", { 
+          method: "POST",
+          body: bodyContent,
+          headers: headersList
+        }).then(function(response) {
+          //console.log(response.text())
+          return response.text();
+        }).then(function(data) {
+          const jsconConverido = JSON.parse(data);
+          console.log(data)
+           valuesArray = jsconConverido["listaD"];
+           
+          if(valuesArray.length > 0){  
+               for (const row of valuesArray) {
+               
+               let  objeto =  {
+                idPrueba: row.id_prueba,
+                antena: row.antena,
+                metraje: row.metraje,
+                prueba: row.prueba,
+                fecha: row.fecha,
+                horaInicial: row.hora_inicial + "",
+                tag: row.tag,
+                horaTag: row.hora_tag + "",
+                tiempoEstimado: row.tiempo_estimado + ""
+                 };
+             
+                 lista.push(objeto);
+                 objeto = {};
+               }
+               console.log(valuesArray.length);
+           }else{
+             setIsAlerta(true);
+           }
+  
+            setDatosD(lista);
+        })
+  
+  
+      
+        return response;
+      }
+
+      const GetDataO = async () => {
+
+     
+        var fechaFormato = format(value, "y-MM-dd");
+       
+    
+         let valuesArray = [];
+         let lista = [];
+         const response = [];
+         let headersList = {
+           "Accept": "*/*",
+           "User-Agent": "Thunder Client (https://www.thunderclient.com)",
+           "Content-Type": "application/json"
+          }
+          
+          let bodyContent = JSON.stringify({
+              "fecha": fechaFormato,
+              "prueba":pruebaNum,
+              "tag": tag
+          });
+          
+          await fetch("http://192.168.100.42/apis/apis/registrosO.php", { 
+            method: "POST",
+            body: bodyContent,
+            headers: headersList
+          }).then(function(response) {
+           
+            return response.text();
+          }).then(function(data) {
+            const jsconConverido = JSON.parse(data);
+           
+             valuesArray = jsconConverido["listaO"];
+            
+            if(valuesArray.length > 0){  
+                 for (const row of valuesArray) {
+                 
+                 let  objeto =  {
+                      idPrueba: row.id_prueba,
+                      antena: row.antena,
+                      metraje: row.metraje,
+                      prueba: row.prueba,
+                      fecha: row.fecha,
+                      horaInicial: row.hora_inicial + "",
+                      tag: row.tag,
+                      horaTag: row.hora_tag + "",
+                      tiempoEstimado: row.tiempo_estimado + ""
+                   };
+               
+                   lista.push(objeto);
+                   objeto = {};
+                 }
+             }else{
+               setIsAlerta(true);
+             }
+    
+              setDatosO(lista);
+          })
+    
+    
+          setPending(true);
+           setTimeout(() => {         
+           setPending(false);
+          }, 2500);
+          return response;
+        }
+
+
 
      useEffect(()=>{GetData();},[]);
 
@@ -377,7 +723,7 @@ const PageBody = () => {
                 <Grid item xs={2} >
                  
                 <Tooltip title="Buscar">
-                <Button variant="contained" endIcon={ <FontAwesomeIcon icon={faSearch} />}  onClick={GetData}  size="small">
+                <Button variant="contained" endIcon={ <FontAwesomeIcon icon={faSearch} />}  onClick={() => {GetData(); setIsBusqueda(true)}}  size="small">
                   Buscar
                 </Button>
               
@@ -390,16 +736,23 @@ const PageBody = () => {
          </AppBar>
         
         <div style={{paddingTop:'120px',paddingLeft:"40px", paddingRight:"40px",paddingBottom:"40px"}}>
-
+        <BotonesTablas isBuscado={isBusqueda} setIsBuscado={setIsBusqueda} listaD={datosD} listaO={datosO}  setModal={setOpenModal} />
+        <BasicModal isModal={openModal} setModal={setOpenModal} fecha={value} prueba={pruebaNum} setAlerta={setIsAlertaSuccess}/>
+        <br/>
        
-      <Snackbar open={isAlerta} autoHideDuration={3000} onClose={handleClose} TransitionComponent={Transition}  >
-        <Alert onClose={handleClose} severity="warning" sx={{ width: '100%' }}>
-          Sin coincidencias en fehca:{fechas}  prueba: {pruebaNum} tag: {tag}
-        </Alert>
-      </Snackbar>
+          <Snackbar open={isAlerta} autoHideDuration={3000} onClose={handleClose} TransitionComponent={Transition}  >
+            <Alert onClose={handleClose} severity="warning" sx={{ width: '100%' }}>
+              Sin coincidencias en fehca:{fechas}  prueba: {pruebaNum} tag: {tag} !
+            </Alert>
+          </Snackbar>
+          <Snackbar open={isAlertaSuccess} autoHideDuration={3000} onClose={handleCloseSuccsess} TransitionComponent={Transition}  >
+            <Alert onClose={handleCloseSuccsess} severity="success" sx={{ width: '100%' }}>
+              Se elimino prueba !
+            </Alert>
+          </Snackbar>
        
-        <MyComponent isPendiente={pending} set={setPending} row={datos}/>
-
+          <MyComponent isPendiente={pending} set={setPending} row={datos}/>
+         
         </div>
         </>
     );
