@@ -33,6 +33,7 @@ import {
     faFilePdf ,
     faSearch,
     faTrash,
+    faCheck
 
 } from '@fortawesome/free-solid-svg-icons';
 import DateTimePicker from 'react-datetime-picker';
@@ -421,7 +422,7 @@ const BasicModal = (props) => {
        
      });
      
-     fetch("192.168.100.42/apis/apis/eliminarRegistros.php", { 
+     fetch(props.host+"/apis/apis/eliminarRegistros.php", { 
        method: "POST",
        body: bodyContent,
        headers: headersList
@@ -469,6 +470,51 @@ const BasicModal = (props) => {
   );
 }
 
+const ModalHost = (props) => {
+  const [open, setOpen] = React.useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+  const HandleChangeHost = async (event)  => {     
+    props.setHost(event.target.value); 
+   };
+  return (
+    <div>
+      <Button onClick={handleOpen}>Cambiar host</Button>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+          Cambiar de direccion ip
+          </Typography>
+          <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+           pulsa  la techa de windows + r, y ingresa el comado ipconfig necesitas escribir aqui el valor de ipv4
+          </Typography>
+          <br/>
+          <FormControl fullWidth >
+             <TextField
+            id="outlined-basic"
+            label="#Host"
+            variant="outlined"        
+            defaultValue={props.host}
+            onChange={HandleChangeHost}
+            style={{height:"30px"}}
+
+            />
+          </FormControl>
+          <br/><br/>
+          <Button  variant="contained" style={{backgroundColor:'#28B463 ', width:'100%'}} endIcon={<FontAwesomeIcon icon={faCheck} />} onClick={handleClose}>
+           Aceptar
+            </Button>
+        </Box>
+      </Modal>
+    </div>
+  );
+}
+
 const PageBody = () => {
     let [datos, setDatos] = useState([]);    
     let [datosD, setDatosD] = useState([]);  
@@ -481,7 +527,7 @@ const PageBody = () => {
     const [isAlerta, setIsAlerta] = React.useState(false);
     const [isAlertaSuccess, setIsAlertaSuccess] = React.useState(false);
     const [openModal, setOpenModal] = React.useState(false);
-    
+    const [host,setHost] = React.useState("192.168.100.42");
     var fechas = format(value, "y-MM-dd");
   
   
@@ -522,7 +568,7 @@ const PageBody = () => {
            "tag": tag
        });
        
-       await fetch("http://192.168.100.42/apis/apis/lecturas.php", { 
+       await fetch("http://"+host+"/apis/apis/lecturas.php", { 
          method: "POST",
          body: bodyContent,
          headers: headersList
@@ -584,7 +630,7 @@ const PageBody = () => {
             "tag": tag
         });
         
-        await fetch("http://192.168.100.42/apis/apis/registrosD.php", { 
+        await fetch("http://"+host+"/apis/apis/registrosD.php", { 
           method: "POST",
           body: bodyContent,
           headers: headersList
@@ -648,7 +694,7 @@ const PageBody = () => {
               "tag": tag
           });
           
-          await fetch("http://192.168.100.42/apis/apis/registrosO.php", { 
+          await fetch("http://"+host+"/apis/apis/registrosO.php", { 
             method: "POST",
             body: bodyContent,
             headers: headersList
@@ -731,13 +777,21 @@ const PageBody = () => {
 
                  
                 </Grid>
+                <Grid item xs={2} >
+                 
+                 <Tooltip title="Cambiar host">
+                  <ModalHost setHost={setHost}  host={host}/>
+                  </Tooltip>
+ 
+                  
+                 </Grid>
             </Grid>
             </div>
          </AppBar>
         
         <div style={{paddingTop:'120px',paddingLeft:"40px", paddingRight:"40px",paddingBottom:"40px"}}>
         <BotonesTablas isBuscado={isBusqueda} setIsBuscado={setIsBusqueda} listaD={datosD} listaO={datosO}  setModal={setOpenModal} />
-        <BasicModal isModal={openModal} setModal={setOpenModal} fecha={value} prueba={pruebaNum} setAlerta={setIsAlertaSuccess}/>
+        <BasicModal isModal={openModal} setModal={setOpenModal} fecha={value} prueba={pruebaNum} setAlerta={setIsAlertaSuccess} host={host}/>
         <br/>
        
           <Snackbar open={isAlerta} autoHideDuration={3000} onClose={handleClose} TransitionComponent={Transition}  >
