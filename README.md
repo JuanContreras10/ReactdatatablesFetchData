@@ -9,6 +9,10 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 ![image](https://user-images.githubusercontent.com/80430318/152655860-49c60107-8e45-4688-8098-a5b38b707bf3.png)
 ### Datos
 ![image](https://user-images.githubusercontent.com/80430318/152656323-4a8d1855-de15-4ae1-a302-83d91b400212.png)
+### Botones
+![image](https://user-images.githubusercontent.com/80430318/153319568-c2d52bbf-96de-4e79-a21f-749031162763.png)
+### Modals
+![image](https://user-images.githubusercontent.com/80430318/153319640-fe3e8fe5-dafd-4aec-8d42-19a1a1471518.png)
 
 
 ## Available Scripts
